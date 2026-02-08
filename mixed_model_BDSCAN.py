@@ -306,6 +306,7 @@ if __name__ == "__main__":
         ct_table,
         return_time=True
     )
+    ct_train_df.to_csv('hBDSCAN_train.csv', index=False)
 
     hdb_models = train_hdbscan_per_column(
         ct_train_df=ct_train_df,
@@ -315,10 +316,11 @@ if __name__ == "__main__":
     )
 
     # f3：映射（val + test）
+    ct_train_df,  map_train_secs  = f3.map_ct_with_hdbscan_models(X_train_fit.copy(),  ct_table, hdb_models,return_time=True)
     ct_val_df,  map_val_secs  = f3.map_ct_with_hdbscan_models(X_val.copy(),  ct_table, hdb_models,return_time=True)
     ct_test_df, map_test_secs = f3.map_ct_with_hdbscan_models(X_test.copy(), ct_table, hdb_models,return_time=True)
     ct_map_time_s = map_val_secs + map_test_secs
-
+    ct_train_df.to_csv('hBDSCAN_train.csv', index=False)
     # raw 分數
     ct_rf = RandomForestClassifier(n_estimators=150, class_weight="balanced", random_state=42, max_depth=10, n_jobs=None)
     t0=now(); ct_rf.fit(ct_train_df, y_train_fit);  ct_rf_fit_time_s = now()-t0
