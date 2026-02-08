@@ -95,6 +95,41 @@ def map_features_to_ct(df: pd.DataFrame, ct_table, default_value: float = DEFAUL
     compute_secs = time.perf_counter() - t0
     return (df_ct, compute_secs) if return_time else df_ct
 
+import hdbscan
+
+def map_ct_with_hdbscan_models(
+    df: pd.DataFrame, ct_table, hdb_models: dict, default_value: float = DEFAULT_CT_VALUE, return_time: bool = False
+):
+
+    """
+    使用 column-wise HDBSCAN models 進行 mapping
+
+    回傳：
+        labels_df    : 每個欄位的 cluster label
+        strength_df  : 每個欄位的 membership strength
+    """
+
+    labels = {}
+    strengths = {}
+
+    ct_df = map_features_to_ct(df, ct_table, default_value, False)
+    
+    for col, hdb in hdb_models.items():
+        if col not in ct_df.columns:
+            continue
+
+        x = ct_df[[col]].values.reshape(-1,1)
+
+        lbl, _ = hdbscan.approximate_predict(hdb, x)
+
+        labels[col] = lbl
+        # strengths[col] = strg
+
+    labels_df = pd.DataFrame(labels, index=ct_df.index)
+    # strength_df = pd.DataFrame(strengths, index=ct_df.index)  strength_df
+
+    return labels_df, 0
+
 
 # import os
 # import pandas as pd
