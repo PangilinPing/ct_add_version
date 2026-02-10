@@ -166,8 +166,8 @@ def run_xgb_comp(round_id, X_train_fit, y_train_fit, X_val, y_val, X_test, y_tes
 def train_hdbscan_per_column(
     ct_train_df: pd.DataFrame,
     save_dir: str | None = None,
-    min_cluster_size: int = 30,
-    min_samples: int = 10
+    min_cluster_size: int = 300, #5 1
+    min_samples: int = 100
 ):
     """
     對每個 CT column 各自訓練一個 HDBSCAN（1D CT space）
@@ -306,7 +306,6 @@ if __name__ == "__main__":
         ct_table,
         return_time=True
     )
-    ct_train_df.to_csv('hBDSCAN_train.csv', index=False)
 
     hdb_models = train_hdbscan_per_column(
         ct_train_df=ct_train_df,
@@ -320,7 +319,9 @@ if __name__ == "__main__":
     ct_val_df,  map_val_secs  = f3.map_ct_with_hdbscan_models(X_val.copy(),  ct_table, hdb_models,return_time=True)
     ct_test_df, map_test_secs = f3.map_ct_with_hdbscan_models(X_test.copy(), ct_table, hdb_models,return_time=True)
     ct_map_time_s = map_val_secs + map_test_secs
+    ct_train_df['label'] = y_train_fit
     ct_train_df.to_csv('hBDSCAN_train.csv', index=False)
+    ct_train_df.drop(['label'],axis=1, inplace=True)
     # raw 分數
     ct_rf = RandomForestClassifier(n_estimators=150, class_weight="balanced", random_state=42, max_depth=10, n_jobs=None)
     t0=now(); ct_rf.fit(ct_train_df, y_train_fit);  ct_rf_fit_time_s = now()-t0
